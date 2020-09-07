@@ -7,7 +7,7 @@
 # 
 # Суть проекта — отследить влияние условий жизни учащихся в возрасте от 15 до 22 лет на их успеваемость по математике, чтобы на ранней стадии выявлять студентов, находящихся в группе риска.
 
-# In[867]:
+# In[52]:
 
 
 import pandas as pd
@@ -21,7 +21,7 @@ from scipy.stats import ttest_ind
 # # Ознакомление
 # Для начала загрузим файл в датафрейм (ДФ), переименуем некоторые колонки для удобства и посмотрим развернутый ДФ.
 
-# In[868]:
+# In[79]:
 
 
 students = pd.read_csv('stud_math.csv')
@@ -31,7 +31,7 @@ students.rename(columns={'studytime, granular': 'studytime_granular',
 pd.set_option('max_columns', None)
 
 
-# In[869]:
+# In[54]:
 
 
 students.sample(10)
@@ -97,40 +97,49 @@ students.sample(10)
 # 
 # score — баллы по госэкзамену по математике
 
-# #### ДФ содержит информацию о 395 учащихся. Некоторые колонки содержат пустые значения. Посмотрим информацию о колонках.
-
-# In[870]:
+# In[55]:
 
 
 students.info()
 
 
+# В датасете всего 30 колонок: 13 числовых колонок и 17 строковых. 
+# Датасете содержит данные данные о 395 учениках.
+# Во всех колонках, кроме school, sex, age есть пустые значения.
+
+# In[106]:
+
+
+type(students.sex)
+
+
 # # Очистка данных
 
-# In[871]:
+# In[110]:
 
 
 # Функция для получения быстрой справки о данных в колонках
 def info(x):
     print(pd.DataFrame(x.value_counts()))
     print('Пропущенных значений -', x.isnull().values.sum())
+    x.hist()
 
 
 # ### Просмотр числовыx столбцов
 
-# In[872]:
+# In[111]:
 
 
 info(students.age)
 
 
-# In[873]:
+# In[112]:
 
 
 info(students.medu)
 
 
-# In[874]:
+# In[59]:
 
 
 info(students.fedu)
@@ -138,37 +147,37 @@ info(students.fedu)
 
 # Исправим опечатку значения 40.0, вероятно имелось ввиду 4.
 
-# In[875]:
+# In[60]:
 
 
 students.fedu = students.fedu.apply(lambda x: x/10 if x > 9 else x)
 
 
-# In[876]:
+# In[61]:
 
 
 info(students.traveltime)
 
 
-# In[877]:
+# In[62]:
 
 
 info(students.studytime)
 
 
-# In[878]:
+# In[63]:
 
 
 info(students.failures)
 
 
-# In[879]:
+# In[64]:
 
 
 info(students.studytime_granular)
 
 
-# In[880]:
+# In[65]:
 
 
 info(students.famrel)
@@ -176,37 +185,80 @@ info(students.famrel)
 
 # Исправим опечатку значения -1.0, вероятно имелось ввиду 1.0
 
-# In[881]:
+# In[66]:
 
 
 students.famrel = students.famrel.apply(lambda x: abs(x) if x < 0 else x)
 
 
-# In[882]:
+# In[67]:
 
 
 info(students.freetime)
 
 
-# In[883]:
+# In[68]:
 
 
 info(students.goout)
 
 
-# In[884]:
+# In[69]:
 
 
 info(students.health)
 
 
-# In[885]:
+# In[70]:
 
 
 info(students.absences)
 
 
-# In[886]:
+# Вероятно, значения 212 и 385 являются ошибками, т.к. выходят за рамки кол-ва учебных дней и кол-ва дней в году соответственно. Удалим их из датасета.
+
+# In[71]:
+
+
+students = students[~students.absences.isin([212.0,385.0])]
+len(students)
+
+
+# Посмотрим еще раз не получившийся результат? определим выбросы и удалим их.
+
+# In[72]:
+
+
+info(students.absences)
+
+
+# In[73]:
+
+
+median = students.absences.median()
+IQR = students.absences.quantile(0.75) - students.absences.quantile(0.25)
+perc25 = students.absences.quantile(0.25)
+perc75 = students.absences.quantile(0.75)
+print('25-й перцентиль: {},'.format(perc25), 
+      '75-й перцентиль: {},'.format(perc75), 
+      "IQR: {}, ".format(IQR),
+      "Границы выбросов: [{f}, {l}].".format(f=perc25 - 1.5*IQR, l=perc75 + 1.5*IQR))
+students.absences.loc[students.absences.between(perc25 - 1.5*IQR, perc75 + 1.5*IQR)].hist(bins = 16, 
+                                                                                              range = (0, 30),
+                                                                                              label = 'IQR')
+plt.legend();
+
+
+# Выбросами считаем значения больше 30, т.к. пропуск более 30 учебных дней скорее всего приведет к переводу ученика на домашнее обучение.
+
+# In[74]:
+
+
+students = students.absences.loc[students.absences.between(perc25 - 1.5*IQR, perc75 + 1.5*IQR)]
+len(students)
+
+
+# In[80]:
 
 
 info(students.score)
@@ -216,111 +268,111 @@ info(students.score)
 
 # ### Просмотр строковых столбцов
 
-# In[887]:
+# In[81]:
 
 
 info(students.school)
 
 
-# In[888]:
+# In[82]:
 
 
 info(students.sex)
 
 
-# In[889]:
+# In[83]:
 
 
 info(students.address)
 
 
-# In[890]:
+# In[84]:
 
 
 info(students.famsize)
 
 
-# In[891]:
+# In[85]:
 
 
 info(students.pstatus)
 
 
-# In[892]:
+# In[86]:
 
 
 info(students.mjob)
 
 
-# In[893]:
+# In[87]:
 
 
 info(students.fjob)
 
 
-# In[894]:
+# In[88]:
 
 
 info(students.reason)
 
 
-# In[895]:
+# In[89]:
 
 
 info(students.guardian)
 
 
-# In[896]:
+# In[90]:
 
 
 info(students.schoolsup)
 
 
-# In[897]:
+# In[91]:
 
 
 info(students.famsup)
 
 
-# In[898]:
+# In[92]:
 
 
 info(students.paid)
 
 
-# In[899]:
+# In[93]:
 
 
 info(students.activities)
 
 
-# In[900]:
+# In[94]:
 
 
 info(students.nursery)
 
 
-# In[901]:
+# In[95]:
 
 
 info(students.higher)
 
 
-# In[902]:
+# In[96]:
 
 
 info(students.internet)
 
 
-# In[903]:
+# In[97]:
 
 
 info(students.romantic)
 
 
-# Строковые данные выглядят похуже числовых, но максимальное количество пропущенных значений в колонках лежит в пределах 10% от общего количества учащихся, что допустимо в рамках этой задачи, по моему мнению.
+# Строковые данные содержат большее кол-во пропусков.
 
-# In[904]:
+# In[ ]:
 
 
 # Можно было бы заменить все NaN на None, как обсуждалось в группе по проекту, но в таком случае перестает работать корреляция.
@@ -330,7 +382,7 @@ info(students.romantic)
 # # Поиск зависимостей
 # Посмотрим корреляцию числовых значений
 
-# In[905]:
+# In[113]:
 
 
 students.corr()
@@ -346,7 +398,7 @@ students.corr()
 
 # Построим графики и посмотрим на распределения строковых данных
 
-# In[906]:
+# In[114]:
 
 
 def get_boxplot(column):
@@ -358,7 +410,7 @@ def get_boxplot(column):
     plt.show()
 
 
-# In[907]:
+# In[115]:
 
 
 for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason', 'guardian', 'schoolsup', 'famsup', 'paid', 
@@ -374,16 +426,19 @@ for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason',
 #     <li>с размеров семьи больше 3 человек (famsize)</li>
 #     <li>родители которых проживают совместно (pstatus)
 #     <li>опекуном которых является мать (guardian) - статистическое большинство
+#     <li>без дополнительной образовательной поддержки
 #     <li>имеющих учебную поддержку дома (famsup)
 #     <li>не занимающихся дополнительно (платно) (paid)
 #     <li>посещавших детский сад
 #     <li>не собирающихся получать высшее образование (higher) - сильно влияет
+#     <li>женского пола
 #     <li>имеющих доступ к интернету
+#     <li>состоящих в романтических отношениях
 # </ul>
 
 # Сделаем тест Стюдента
 
-# In[908]:
+# In[116]:
 
 
 def get_stat_dif(column):
@@ -397,7 +452,7 @@ def get_stat_dif(column):
             break
 
 
-# In[909]:
+# In[117]:
 
 
 for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason', 'guardian', 'schoolsup', 'famsup', 'paid',
@@ -413,9 +468,15 @@ for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason',
 #     <li>Остальные параметры в меньшей степени влияют на результат, но их сумма может оказать решающее воздействие.</li>
 # </ol>
 
-# In[915]:
+# In[118]:
 
 
-model = students[['school','age', 'address', 'medu', 'fedu', 'mjob', 'fjob', 'studytime', 'failures', 'higher', 'goout', 'absences', 'score']]
+model = students[['school','age','sex','address', 'medu', 'fedu', 'mjob', 'fjob', 'studytime', 'failures','romantic','schoolsup','higher', 'goout', 'absences', 'score']]
 model
+
+
+# In[ ]:
+
+
+
 
