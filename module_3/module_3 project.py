@@ -3,7 +3,7 @@
 
 # # Загрузка Pandas и просмотр данных
 
-# In[917]:
+# In[47]:
 
 
 import pandas as pd
@@ -17,9 +17,11 @@ from itertools import combinations
 import scipy.stats
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import PolynomialFeatures
+from scipy.stats import ttest_ind
+import time 
 
 
-# In[918]:
+# In[26]:
 
 
 df = pd.read_csv('main_task.csv')
@@ -27,7 +29,7 @@ df_original = pd.read_csv('main_task.csv')
 df.head(5)
 
 
-# In[919]:
+# In[27]:
 
 
 # Посмотрим какие данные представлены в датасете
@@ -36,7 +38,7 @@ df.info()
 
 # У нас есть 3 столбца с числовыми значениями, остальные со строковыми. Столбец Price Range содержит интервальные данные, позже мы их преобразуем. Из столбца Reviews также сможем выделить числовые значения, такие как "длина комментариев" и "дата". Из столбца Cuisine Slyle получим числовое значение кол-ва представленных кухонь.
 
-# In[920]:
+# In[28]:
 
 
 # Посмотрим кол-во пропусков по столбцам
@@ -50,7 +52,7 @@ dict(zip(cols, nans))
 
 # # Работа с попусками
 
-# In[921]:
+# In[29]:
 
 
 # Заполним пропуски
@@ -69,7 +71,7 @@ df['Number of Reviews'].fillna(0, inplace=True)
 
 # # Обработка признаков
 
-# In[922]:
+# In[30]:
 
 
 pd.set_option('mode.chained_assignment', None) # Чтобы не ругался
@@ -93,14 +95,17 @@ for i in range(0, len(df['Cuisine Style'])):
 cuisines_dict['Unknown'] = cuisines_dict.pop('nknow')
 
 
-# In[923]:
+# In[31]:
 
 
 # Получим спиcок всех дат и запишем разницу в днях между ними в новый столбец.
 # Среднюю длину отзывов запишем также в новый столбец
+start_time = time.time()
+
 df['Reviews Interval'] = None
 df['Reviews Lenght'] = None
 
+# Цикл разделяет строку на отзывы и даты, затем разделяет значения, складывает значения в ДФ
 for i in range(0, len(df['Reviews'])):
     inc_reviews = df['Reviews'][i][2:-2].split('], [')[0]
     inc_dates = df['Reviews'][i][2:-2].split('], [')[1]
@@ -108,24 +113,26 @@ for i in range(0, len(df['Reviews'])):
     res_dates = []
     res_len_reviews = []
     for j in range(0, len(datelist)):
-        if datelist == ['']:
+        if datelist == ['']: 
             res_len_reviews.append(0)
             res_dates.append(0)
         else:
             review = inc_reviews.split(', ')[j][1:-1]
             res_len_reviews.append(len(review))
-            date = datetime.strptime(datelist[j], "'%m/%d/%Y'")
+            date = datetime.strptime(datelist[j], "'%m/%d/%Y'") # приводит к datetime
             res_dates.append(date)
     df['Reviews Lenght'][i] = np.array(res_len_reviews).mean()
     df['Reviews Interval'][i] = res_dates
 
-
+# Цикл преобазует значения дат в разницу дней
 for i in range(0, len(df['Reviews Interval'])):
     if df['Reviews Interval'][i] == [] or len(df['Reviews Interval'][i]) == 1: df['Reviews Interval'][i] = 0
     else: df['Reviews Interval'][i] = (abs(df['Reviews Interval'][i][0] - df['Reviews Interval'][i][1])).days
+        
+print("--- %s seconds ---" % (time.time() - start_time))
 
 
-# In[924]:
+# In[32]:
 
 
 # Заменим значения Price Range на числовые
@@ -133,7 +140,7 @@ price_dict = {'$': 1, '$$ - $$$': 2, '$$$$': 3}
 df['Price Range'] = df['Price Range'].replace(to_replace=price_dict)
 
 
-# In[925]:
+# In[33]:
 
 
 # Создадим dummy variables для видов кухонь
@@ -143,14 +150,14 @@ dummies.drop(['index'], axis='columns', inplace=True)
 df = df.join(dummies)
 
 
-# In[926]:
+# In[34]:
 
 
 # Тоже самое сделаем для городов
 df = pd.get_dummies(df, columns=[ 'City',], dummy_na=True)
 
 
-# In[927]:
+# In[35]:
 
 
 # Посмотрим, что получается
@@ -160,7 +167,7 @@ df.head(5)
 
 # # Обогащение
 
-# In[928]:
+# In[36]:
 
 
 # В приступе отсутствия лени, добавим в датасет информацию о населении городов.
@@ -169,7 +176,7 @@ cities = pd.read_csv('worldcities.csv')
 cities
 
 
-# In[929]:
+# In[37]:
 
 
 # Проверим, все ли наши города присутствуют в нем.
@@ -178,7 +185,7 @@ result = city_to_check.isin(cities.city_ascii.unique())
 city_to_check[result == False].dropna() # Посмотрим кто отуствует
 
 
-# In[930]:
+# In[38]:
 
 
 # Постотрим сколько раз названия наших городов втсречаются в датасете WC
@@ -187,7 +194,7 @@ for i in range(len(city_to_check[0])):
         display(cities[cities.city_ascii == city_to_check[0][i]])
 
 
-# In[931]:
+# In[39]:
 
 
 # Видно что дубликаты городов: 28 из US, 1 из VE, 1 из CA.
@@ -196,7 +203,7 @@ to_del = cities[cities.iso2.isin(['US','VE','CA'])]
 cities = cities[~cities.index.isin(to_del.index)]
 
 
-# In[932]:
+# In[40]:
 
 
 # Получим значения population для наших городов
@@ -216,7 +223,7 @@ missed_cities = {'Oporto': 214349,'Copenhagen': 602481}
 population_dict.update(missed_cities)
 
 
-# In[933]:
+# In[41]:
 
 
 # Добавим в рабочий датафрейм данные о населении
@@ -228,7 +235,7 @@ for i in range(len(df)):
 
 # # Анализ данных
 
-# In[934]:
+# In[42]:
 
 
 # Проверим распределение признака Ranking на нормальность
@@ -243,14 +250,14 @@ else:
     print('Ненормальное распределение признака')
 
 
-# In[935]:
+# In[43]:
 
 
 # Посмотрим на его распределение в ТОП1 городе 
 df_original['Ranking'][df_original['City'] =='London'].hist(bins=100)
 
 
-# In[936]:
+# In[44]:
 
 
 # Посмотрим на его распределение в ТОП10 городах
@@ -261,7 +268,7 @@ plt.show()
 
 # Получается, что Ranking имеет нормальное распределение, просто в больших городах больше ресторанов, из-за мы этого имеем смещение. (Списал с ноутубка Kaggle)
 
-# In[937]:
+# In[48]:
 
 
 # Сделаем тест Стьюдента
@@ -276,7 +283,7 @@ def get_stat_dif(column):
             break
 
 
-# In[938]:
+# In[49]:
 
 
 for col in ['Ranking', 'Price Range', 'Number of Reviews', 'Cuisine Quantity', 'Reviews Interval', 'Reviews Lenght']:
@@ -285,14 +292,14 @@ for col in ['Ranking', 'Price Range', 'Number of Reviews', 'Cuisine Quantity', '
 
 # Забираем эти столбцы в модель.
 
-# In[939]:
+# In[50]:
 
 
 # Соберем модель для корреляции, исключая кухни (их очень много)
 corr_model = df[df.columns[:12]].join(df[df.columns[-32:]])
 
 
-# In[940]:
+# In[51]:
 
 
 plt.rcParams['figure.figsize'] = (12,8)
@@ -312,7 +319,7 @@ sns.heatmap(corr_model.corr(),cmap='coolwarm')
 
 # # Подготовка модели
 
-# In[941]:
+# In[52]:
 
 
 # Удалим столбцы типа Object
@@ -320,7 +327,7 @@ model = df
 model.drop(['Restaurant_id','Cuisine Style','Reviews','URL_TA','ID_TA'], axis='columns', inplace=True)
 
 
-# In[942]:
+# In[53]:
 
 
 # Нормализуем все признаки и целевую переменную
@@ -341,7 +348,7 @@ model
 
 # # Разбиваем датафрейм на части, необходимые для обучения и тестирования модели
 
-# In[943]:
+# In[54]:
 
 
 # Х - данные с информацией о ресторанах, у - целевая переменная (рейтинги ресторанов)
@@ -349,14 +356,14 @@ X = model.drop(['Rating'], axis = 1)
 y = model['Rating']
 
 
-# In[944]:
+# In[55]:
 
 
 # Загружаем специальный инструмент для разбивки:
 from sklearn.model_selection import train_test_split
 
 
-# In[945]:
+# In[56]:
 
 
 # Наборы данных с меткой "train" будут использоваться для обучения модели, "test" - для тестирования.
@@ -366,7 +373,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
 
 # # Создаём, обучаем и тестируем модель
 
-# In[946]:
+# In[57]:
 
 
 # Импортируем необходимые библиотеки:
@@ -374,7 +381,7 @@ from sklearn.ensemble import RandomForestRegressor # инструмент для
 from sklearn import metrics # инструменты для оценки точности модели
 
 
-# In[947]:
+# In[58]:
 
 
 # Создаём модель
@@ -388,7 +395,7 @@ regr.fit(X_train, y_train)
 y_pred = regr.predict(X_test)
 
 
-# In[948]:
+# In[59]:
 
 
 # Сравниваем предсказанные значения (y_pred) с реальными (y_test), и смотрим насколько они в среднем отличаются
@@ -397,7 +404,7 @@ MAE = metrics.mean_absolute_error(y_test, y_pred)
 print('MAE:', MAE)
 
 
-# In[949]:
+# In[60]:
 
 
 # Оценка влияния признаков на качество модели
@@ -408,26 +415,26 @@ feat_importances.nlargest(15).plot(kind='barh')
 
 # # Применим модель ко всему датафрейму
 
-# In[950]:
+# In[61]:
 
 
 y_pred = regr.predict(X)
 
 
-# In[951]:
+# In[62]:
 
 
 MAE = metrics.mean_absolute_error(y, y_pred)
 print('MAE:', MAE)
 
 
-# In[952]:
+# In[63]:
 
 
 norm_predicted_rating = y_pred + MAE
 
 
-# In[953]:
+# In[64]:
 
 
 # Данные в модели нормализованы, для понимания сопоставим данные из модели с оригинальным датасетом
