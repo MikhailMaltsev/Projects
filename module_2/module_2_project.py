@@ -7,7 +7,7 @@
 # 
 # Суть проекта — отследить влияние условий жизни учащихся в возрасте от 15 до 22 лет на их успеваемость по математике, чтобы на ранней стадии выявлять студентов, находящихся в группе риска.
 
-# In[1]:
+# In[88]:
 
 
 import pandas as pd
@@ -23,7 +23,7 @@ import itertools as it
 # # Ознакомление
 # Для начала загрузим файл в датафрейм (ДФ), переименуем некоторые колонки для удобства и посмотрим развернутый ДФ.
 
-# In[2]:
+# In[89]:
 
 
 df = pd.read_csv('stud_math.csv')
@@ -33,7 +33,7 @@ df.rename(columns={'studytime, granular': 'studytime_granular',
 pd.set_option('max_columns', None)
 
 
-# In[3]:
+# In[90]:
 
 
 df.sample(10)
@@ -99,13 +99,13 @@ df.sample(10)
 # 
 # score — баллы по госэкзамену по математике
 
-# In[4]:
+# In[91]:
 
 
 df.info()
 
 
-# In[5]:
+# In[92]:
 
 
 # Посмотрим кол-во пропусков в колонках
@@ -118,7 +118,7 @@ df.isna().sum()
 
 # ### Предобработка
 
-# In[6]:
+# In[93]:
 
 
 # Функция для получения быстрой справки о данных в числовых колонках
@@ -128,7 +128,7 @@ def info_dig(x):
     x.hist()
 
 
-# In[7]:
+# In[94]:
 
 
 # Функция для получения быстрой справки о данных в текстовых колонках
@@ -140,163 +140,163 @@ def info_object(smth):
 
 # ### Просмотр числовыx столбцов
 
-# In[8]:
+# In[95]:
 
 
 info_dig(df.age)
 
 
-# In[9]:
+# In[96]:
 
 
 info_dig(df.medu)
 
 
-# In[10]:
+# In[97]:
 
 
 # Заполним пропуски средним значением
 df.medu.fillna(round(df.medu.mean()), inplace=True)
 
 
-# In[11]:
+# In[98]:
 
 
 info_dig(df.fedu)
 
 
-# In[12]:
+# In[99]:
 
 
 # Исправим опечатку значения 40.0, вероятно имелось ввиду 4.
 df.fedu = df.fedu.apply(lambda x: x/10 if x > 9 else x)
 
 
-# In[13]:
+# In[100]:
 
 
 # Заполним пропуски средним значением
 df.fedu.fillna(round(df.fedu.mean()), inplace=True)
 
 
-# In[14]:
+# In[101]:
 
 
 info_dig(df.traveltime)
 
 
-# In[15]:
+# In[102]:
 
 
 # Заполним пропуски средним значением
 df.traveltime.fillna(round(df.traveltime.mean()), inplace=True)
 
 
-# In[16]:
+# In[103]:
 
 
 info_dig(df.studytime)
 
 
-# In[17]:
+# In[104]:
 
 
 # Заполним пропуски средним значением
 df.studytime.fillna(round(df.studytime.mean()), inplace=True)
 
 
-# In[18]:
+# In[105]:
 
 
 info_dig(df.failures)
 
 
-# In[19]:
+# In[106]:
 
 
 # Заполним пропуски средним значением
 df.failures.fillna(round(df.failures.mean()), inplace=True)
 
 
-# In[20]:
+# In[107]:
 
 
 info_dig(df.studytime_granular)
 
 
-# In[21]:
+# In[108]:
 
 
 # Заполним пропуски средним значением
 df.studytime_granular.fillna(round(df.studytime_granular.mean()), inplace=True)
 
 
-# In[22]:
+# In[109]:
 
 
 info_dig(df.famrel)
 
 
-# In[23]:
+# In[110]:
 
 
 # Исправим опечатку значения -1.0, вероятно имелось ввиду 1.0
 df.famrel = df.famrel.apply(lambda x: abs(x) if x < 0 else x)
 
 
-# In[24]:
+# In[111]:
 
 
 # Заполним пропуски средним значением
 df.famrel.fillna(round(df.famrel.mean()), inplace=True)
 
 
-# In[25]:
+# In[112]:
 
 
 info_dig(df.freetime)
 
 
-# In[26]:
+# In[113]:
 
 
 # Заполним пропуски средним значением
 df.freetime.fillna(round(df.freetime.mean()), inplace=True)
 
 
-# In[27]:
+# In[114]:
 
 
 info_dig(df.goout)
 
 
-# In[28]:
+# In[115]:
 
 
 # Заполним пропуски средним значением
 df.goout.fillna(round(df.goout.mean()), inplace=True)
 
 
-# In[29]:
+# In[116]:
 
 
 info_dig(df.health)
 
 
-# In[30]:
+# In[117]:
 
 
 # Заполним пропуски средним значением
 df.health.fillna(round(df.health.mean()), inplace=True)
 
 
-# In[31]:
+# In[118]:
 
 
 info_dig(df.absences)
 
 
-# In[32]:
+# In[119]:
 
 
 # Вероятно, значения 212 и 385 являются ошибками, т.к. выходят за рамки кол-ва учебных дней и кол-ва дней в году соответственно.
@@ -304,24 +304,26 @@ info_dig(df.absences)
 df = df[~df.absences.isin([212.0,385.0])]
 
 
-# In[33]:
+# In[120]:
 
 
 # Заполним пропуски медианным значением, т.к. достаточно большой разброс
 df.absences.fillna(round(df.absences.median()), inplace=True)
 
 
-# In[34]:
+# In[121]:
 
 
 # Посмотрим еще раз не получившийся результат
 info_dig(df.absences)
 
 
-# In[35]:
+# In[122]:
 
 
-# Определим выбросы и удалим их
+# Определим выбросы и удалим их. Выбросами считаем значения больше 30, 
+# т.к. пропуск более 30 учебных дней скорее всего приведет к переводу ученика на домашнее обучение
+
 median = df.absences.median()
 IQR = df.absences.quantile(0.75) - df.absences.quantile(0.25)
 perc25 = df.absences.quantile(0.25)
@@ -336,57 +338,58 @@ df.absences.loc[df.absences.between(perc25 - 1.5*IQR, perc75 + 1.5*IQR)].hist(bi
 plt.legend();
 
 
-# In[36]:
+# In[123]:
 
 
-# Выбросами считаем значения больше 30, 
-# т.к. пропуск более 30 учебных дней скорее всего приведет к переводу ученика на домашнее обучение.
 # Удалим выбросы
 
 df = df[df.absences.between(perc25 - 1.5*IQR, perc75 + 1.5*IQR)]
 
 
-# In[37]:
+# In[124]:
 
 
 info_dig(df.score)
 
 
-# In[38]:
+# In[125]:
 
 
 # Пропуски в целевой переменной можно удалить
 df = df[~df.score.isna()]
 
+# Также можно удалить нулевые значения, вероятно ученик просто не явился на экзамен
+df = df[df.score > 0.0]
+
 
 # ### Просмотр строковых столбцов
 
-# In[39]:
+# In[126]:
 
 
 info_object(df.school)
 
 
-# In[40]:
+# In[127]:
 
 
 info_object(df.sex)
 
 
-# In[41]:
+# In[128]:
 
 
 info_object(df.address)
 
 
-# In[42]:
+# In[129]:
 
 
 # Чтобы заполнить пропуски найдем среднее время до школы для городских и загородных учеников
 df.groupby(['address'])['traveltime'].mean().reset_index()
 
 
-# In[43]:
+# In[130]:
 
 
 # Т.к. у нас круглые значения в traveltime - будем считать, что 2 и более - это загородные ученики. 
@@ -405,13 +408,13 @@ for i in range(0, len(df)):
             df.address[i] = 'U'
 
 
-# In[44]:
+# In[131]:
 
 
 info_object(df.famsize)
 
 
-# In[45]:
+# In[132]:
 
 
 # Заполним пропуски самым частовстречаемым значением
@@ -420,124 +423,124 @@ info_object(df.famsize)
 df.groupby(['pstatus'])['famsize'].value_counts() 
 
 
-# In[46]:
+# In[133]:
 
 
 # Предположение не оправдалось, во всех группах преобладает значение GT3, им и заполним пропуски
 df.famsize.fillna('GT3', inplace=True)
 
 
-# In[47]:
+# In[134]:
 
 
 info_object(df.pstatus)
 
 
-# In[48]:
+# In[135]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.pstatus.fillna('T', inplace=True)
 
 
-# In[49]:
+# In[136]:
 
 
 info_object(df.mjob)
 
 
-# In[50]:
+# In[137]:
 
 
 # Заполним пропуски неопределенным значением
 df.mjob.fillna('other', inplace=True)
 
 
-# In[51]:
+# In[138]:
 
 
 info_object(df.fjob)
 
 
-# In[52]:
+# In[139]:
 
 
 # Заполним пропуски неопределенным значением
 df.fjob.fillna('other', inplace=True)
 
 
-# In[53]:
+# In[140]:
 
 
 info_object(df.reason)
 
 
-# In[54]:
+# In[141]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.reason.fillna('course', inplace=True)
 
 
-# In[55]:
+# In[142]:
 
 
 info_object(df.guardian)
 
 
-# In[56]:
+# In[143]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.guardian.fillna('mother', inplace=True)
 
 
-# In[57]:
+# In[144]:
 
 
 info_object(df.schoolsup)
 
 
-# In[58]:
+# In[145]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.schoolsup.fillna('no', inplace=True)
 
 
-# In[59]:
+# In[146]:
 
 
 info_object(df.famsup)
 
 
-# In[60]:
+# In[147]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.famsup.fillna('yes', inplace=True)
 
 
-# In[61]:
+# In[148]:
 
 
 info_object(df.paid)
 
 
-# In[62]:
+# In[149]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.paid.fillna('no', inplace=True)
 
 
-# In[63]:
+# In[150]:
 
 
 info_object(df.activities)
 
 
-# In[64]:
+# In[151]:
 
 
 # Значения близкие, хочется распределить пропуски равномерно
@@ -556,59 +559,59 @@ for i in range(0, len(df)):
             counter += 1
 
 
-# In[65]:
+# In[152]:
 
 
 info_object(df.nursery)
 
 
-# In[66]:
+# In[153]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.nursery.fillna('yes', inplace=True)
 
 
-# In[67]:
+# In[154]:
 
 
 info_object(df.higher)
 
 
-# In[68]:
+# In[155]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.higher.fillna('yes', inplace=True)
 
 
-# In[69]:
+# In[156]:
 
 
 info_object(df.internet)
 
 
-# In[70]:
+# In[157]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.internet.fillna('yes', inplace=True)
 
 
-# In[71]:
+# In[158]:
 
 
 info_object(df.romantic)
 
 
-# In[72]:
+# In[159]:
 
 
 # Заполним пропуски самым частовстречаемым значением
 df.romantic.fillna('no', inplace=True)
 
 
-# In[73]:
+# In[160]:
 
 
 # Финальная проверка на пропуски
@@ -618,7 +621,7 @@ df.isna().sum()
 # # Поиск зависимостей
 # Посмотрим корреляцию числовых значений
 
-# In[74]:
+# In[161]:
 
 
 plt.rcParams['figure.figsize'] = (12,8)
@@ -635,7 +638,7 @@ sns.heatmap(df.corr(),cmap='coolwarm')
 
 # Еще раз построим графики и посмотрим на распределения категоральных данных
 
-# In[75]:
+# In[162]:
 
 
 def get_boxplot(column):
@@ -647,7 +650,7 @@ def get_boxplot(column):
     plt.show()
 
 
-# In[76]:
+# In[163]:
 
 
 for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason', 'guardian', 'schoolsup', 'famsup', 'paid', 
@@ -675,7 +678,7 @@ for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason',
 
 # Сделаем тест Стюдента
 
-# In[77]:
+# In[164]:
 
 
 def get_stat_dif(column):
@@ -689,7 +692,7 @@ def get_stat_dif(column):
             break
 
 
-# In[78]:
+# In[165]:
 
 
 for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason', 'guardian', 'schoolsup', 'famsup', 'paid',
@@ -705,7 +708,7 @@ for col in ['school', 'address', 'famsize', 'pstatus', 'mjob', 'fjob', 'reason',
 #     <li>Остальные параметры в меньшей степени влияют на результат, но их сумма может оказать решающее воздействие.</li>
 # </ol>
 
-# In[79]:
+# In[166]:
 
 
 model = df[['school','age','sex','address', 'medu', 'fedu', 'mjob', 'fjob', 'studytime', 'failures','romantic','schoolsup','higher', 'goout', 'absences', 'score']]
