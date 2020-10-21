@@ -3,7 +3,7 @@
 
 # # Загрузка Pandas и просмотр данных
 
-# In[1]:
+# In[47]:
 
 
 import pandas as pd
@@ -20,7 +20,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from scipy.stats import ttest_ind
 
 
-# In[2]:
+# In[48]:
 
 
 df = pd.read_csv('main_task.csv')
@@ -28,7 +28,7 @@ df_original = pd.read_csv('main_task.csv')
 df.head(5)
 
 
-# In[3]:
+# In[49]:
 
 
 # Посмотрим какие данные представлены в датасете
@@ -37,7 +37,7 @@ df.info()
 
 # У нас есть 3 столбца с числовыми значениями, остальные со строковыми. Столбец Price Range содержит интервальные данные, позже мы их преобразуем. Из столбца Reviews также сможем выделить числовые значения, такие как "длина комментариев" и "дата". Из столбца Cuisine Slyle получим числовое значение кол-ва представленных кухонь.
 
-# In[4]:
+# In[50]:
 
 
 # Посмотрим кол-во пропусков по столбцам
@@ -46,7 +46,7 @@ df.isna().sum()
 
 # # Работа с попусками
 
-# In[5]:
+# In[51]:
 
 
 # Дальше мы будем менять категоральные признаки на числовые, поэтому Price Range я заполняю 0
@@ -63,7 +63,7 @@ df['Number of Reviews'].fillna(0, inplace=True)
 
 # # Обработка признаков
 
-# In[6]:
+# In[52]:
 
 
 # Значения кухонь приведем к списку
@@ -73,7 +73,7 @@ df['Cuisine Style'] = [x[1:-1].split(', ') for x in df['Cuisine Style']]
 df['Cuisine Quantity'] = [len(x) for x in df['Cuisine Style']]
 
 
-# In[7]:
+# In[53]:
 
 
 # Получим спиcок всех дат и запишем разницу в днях между ними в новый столбец.
@@ -93,7 +93,7 @@ df['Reviews Interval'] = [0 if len(x) == 1 else (x[0] - x[1]).days for x in date
 df['Reviews Lenght'] = [x if x == 0 else sum(map(len,x))/len(x) for x in reviews]
 
 
-# In[8]:
+# In[54]:
 
 
 # Заменим значения Price Range на числовые
@@ -101,7 +101,7 @@ price_dict = {'$': 1, '$$ - $$$': 2, '$$$$': 3}
 df['Price Range'] = df['Price Range'].replace(to_replace=price_dict)
 
 
-# In[9]:
+# In[55]:
 
 
 # Создадим dummy variables для видов кухонь
@@ -111,14 +111,14 @@ dummies.drop(['index'], axis='columns', inplace=True)
 df = df.join(dummies)
 
 
-# In[10]:
+# In[56]:
 
 
 # Тоже самое сделаем для городов
 df = pd.get_dummies(df, columns=[ 'City',], dummy_na=True)
 
 
-# In[11]:
+# In[57]:
 
 
 # Посмотрим, что получается
@@ -128,7 +128,7 @@ df.head(5)
 
 # # Обогащение
 
-# In[12]:
+# In[58]:
 
 
 # В приступе отсутствия лени, добавим в датасет информацию о населении городов.
@@ -137,7 +137,7 @@ cities = pd.read_csv('worldcities.csv')
 cities
 
 
-# In[13]:
+# In[59]:
 
 
 # Проверим, все ли наши города присутствуют в нем.
@@ -146,7 +146,7 @@ result = city_to_check.isin(cities.city_ascii.unique())
 city_to_check[result == False].dropna() # Посмотрим кто отуствует
 
 
-# In[14]:
+# In[60]:
 
 
 # Постотрим сколько раз названия наших городов втсречаются в датасете WC
@@ -155,7 +155,7 @@ for i in range(len(city_to_check[0])):
         display(cities[cities.city_ascii == city_to_check[0][i]])
 
 
-# In[15]:
+# In[61]:
 
 
 # Видно что дубликаты городов: 28 из US, 1 из VE, 1 из CA.
@@ -164,7 +164,7 @@ to_del = cities[cities.iso2.isin(['US','VE','CA'])]
 cities = cities[~cities.index.isin(to_del.index)]
 
 
-# In[16]:
+# In[62]:
 
 
 # Получим значения population для наших городов
@@ -184,14 +184,14 @@ missed_cities = {'Oporto': 214349,'Copenhagen': 602481}
 population_dict.update(missed_cities)
 
 
-# In[17]:
+# In[63]:
 
 
 # Добавим в рабочий датафрейм данные о населении
 df['City Population'] = [population_dict.get(x) for x in df_original['City']]
 
 
-# In[18]:
+# In[64]:
 
 
 # Финальная проверка на пропуски
@@ -200,7 +200,7 @@ df.isna().sum().sum()
 
 # # Анализ данных
 
-# In[19]:
+# In[65]:
 
 
 # Проверим распределение признака Ranking на нормальность
@@ -215,14 +215,14 @@ else:
     print('Ненормальное распределение признака')
 
 
-# In[20]:
+# In[66]:
 
 
 # Посмотрим на его распределение в ТОП1 городе 
 df_original['Ranking'][df_original['City'] =='London'].hist(bins=100)
 
 
-# In[21]:
+# In[67]:
 
 
 # Посмотрим на его распределение в ТОП10 городах
@@ -233,7 +233,7 @@ plt.show()
 
 # Получается, что Ranking имеет нормальное распределение, просто в больших городах больше ресторанов, из-за мы этого имеем смещение. (Списал с ноутубка Kaggle)
 
-# In[22]:
+# In[68]:
 
 
 # Сделаем тест Стьюдента
@@ -248,7 +248,7 @@ def get_stat_dif(column):
             break
 
 
-# In[23]:
+# In[69]:
 
 
 for col in ['Ranking', 'Price Range', 'Number of Reviews', 'Cuisine Quantity', 'Reviews Interval', 'Reviews Lenght']:
@@ -257,14 +257,14 @@ for col in ['Ranking', 'Price Range', 'Number of Reviews', 'Cuisine Quantity', '
 
 # Забираем эти столбцы в модель.
 
-# In[24]:
+# In[70]:
 
 
 # Соберем модель для корреляции, исключая кухни (их очень много)
 corr_model = df[df.columns[:12]].join(df[df.columns[-32:]])
 
 
-# In[25]:
+# In[71]:
 
 
 plt.rcParams['figure.figsize'] = (12,8)
@@ -284,7 +284,7 @@ sns.heatmap(corr_model.corr(),cmap='coolwarm')
 
 # # Подготовка модели
 
-# In[26]:
+# In[72]:
 
 
 # Удалим столбцы типа Object
@@ -292,7 +292,7 @@ model = df
 model.drop(['Restaurant_id','Cuisine Style','Reviews','URL_TA','ID_TA'], axis='columns', inplace=True)
 
 
-# In[27]:
+# In[73]:
 
 
 # Нормализуем все признаки и целевую переменную
@@ -301,7 +301,7 @@ scaler = MinMaxScaler()
 
 def normalizer(df):
     for i in range(0,len(df.columns)):
-        if type(df[df.columns[i]][0]) != type('str'):
+        if df.columns[i] != 'Rating':
             to_norm = np.array(df[df.columns[i]]).reshape(-1, 1)
             df[df.columns[i]] = scaler.fit_transform(to_norm)  
         else: 
@@ -313,7 +313,7 @@ model
 
 # # Разбиваем датафрейм на части, необходимые для обучения и тестирования модели
 
-# In[28]:
+# In[74]:
 
 
 # Х - данные с информацией о ресторанах, у - целевая переменная (рейтинги ресторанов)
@@ -321,14 +321,14 @@ X = model.drop(['Rating'], axis = 1)
 y = model['Rating']
 
 
-# In[29]:
+# In[75]:
 
 
 # Загружаем специальный инструмент для разбивки:
 from sklearn.model_selection import train_test_split
 
 
-# In[30]:
+# In[76]:
 
 
 # Наборы данных с меткой "train" будут использоваться для обучения модели, "test" - для тестирования.
@@ -340,7 +340,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # # Создаём, обучаем и тестируем модель
 
-# In[31]:
+# In[77]:
 
 
 # Импортируем необходимые библиотеки:
@@ -348,7 +348,7 @@ from sklearn.ensemble import RandomForestRegressor # инструмент для
 from sklearn import metrics # инструменты для оценки точности модели
 
 
-# In[32]:
+# In[78]:
 
 
 # Создаём модель
@@ -362,7 +362,7 @@ regr.fit(X_train, y_train)
 y_pred = regr.predict(X_test)
 
 
-# In[33]:
+# In[79]:
 
 
 # Сравниваем предсказанные значения (y_pred) с реальными (y_test), и смотрим насколько они в среднем отличаются
@@ -371,7 +371,7 @@ MAE = metrics.mean_absolute_error(y_test, y_pred)
 print('MAE:', MAE)
 
 
-# In[34]:
+# In[80]:
 
 
 # Оценка влияния признаков на качество модели
